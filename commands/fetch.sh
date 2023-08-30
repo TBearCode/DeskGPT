@@ -86,6 +86,45 @@ if [[ "$actions" == *"$arg"* ]];then
 			fi
 		fi
 	fi
+	if [[ $arg == "smallest" ]];then
+		if [[ $arg3 == "in" ]];then
+			path=$(find -type d -iname $arg4)
+			cd $path
+			echo "$(find . -maxdepth 1 -type f | sed 's_./__g')" > files
+			smallest=10000000000
+			count=1
+			while read -r line; do
+				echo $line
+				size=$(stat --printf="%s" $line) 
+				if [[ $size -lt $smallest ]];then
+				smallest=$size
+				smallestcount=$count
+				fi
+				((count=count+1))	
+			done < files
+			echo smallest is:
+			sed -n ${smallestcount}p files
+			rm files
+			cd -
+		else
+			echo "$(find . -maxdepth 1 -type f | sed 's_./__g')" > files
+			smallest=10000000000
+			count=1
+			while read -r line; do
+				echo $line
+				size=$(stat --printf="%s" $line) 
+				if [[ $size -lt $smallest ]];then
+				smallest=$size
+				smallestcount=$count
+				fi
+				((count=count+1))	
+			done < files
+			echo smallest is:
+			sed -n ${smallestcount}p files
+			rm files
+
+		fi
+	fi
 fi
-			
+
 			
