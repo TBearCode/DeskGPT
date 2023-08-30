@@ -10,3 +10,4 @@ Pending Functionality:
     Help - Explain the commands available to the user through this software
     Sort - Sort files
     DevTools : Document - Read through a program file and document blocks (start, end, name) 
+    Enabling functionality for all intended valid arguments for all commands
