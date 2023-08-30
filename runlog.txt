@@ -1,8 +1,0 @@
-What would you like to do?
-1
-make file a
-filenamemake
-file
-a
-working
-making file
