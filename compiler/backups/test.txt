@@ -1,0 +1,4 @@
+make file x.txt
+output all into newexample.txt
+output newexample.txt
+output last into x.txt

@@ -95,8 +95,7 @@ extern int yydebug;
     T_TAKE = 305,
     T_OUTPUT = 306,
     T_LAST_FILE = 307,
-    T_ELEM = 308,
-    T_CLEAR = 309
+    T_ELEM = 308
   };
 #endif
 /* Tokens.  */
@@ -151,7 +150,6 @@ extern int yydebug;
 #define T_OUTPUT 306
 #define T_LAST_FILE 307
 #define T_ELEM 308
-#define T_CLEAR 309
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -164,7 +162,7 @@ union YYSTYPE
 	ASTNode * node;
 	
 
-#line 168 "y.tab.h" /* yacc.c:1909  */
+#line 166 "y.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

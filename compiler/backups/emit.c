@@ -1,10 +1,9 @@
 #include "emit.h"
 #include <string.h>
 #include <stdio.h>
-extern int cl;
 
 void emit_ast(ASTNode *p, FILE *fp){
-	if(p==NULL) return;
+	fprintf(stderr,"EMITTING %d",p->nodetype);
 	switch(p->nodetype){
 		case A_COMMAND_LIST: 
 			emit_ast(p->s1,fp);
@@ -44,8 +43,6 @@ void emit_ast(ASTNode *p, FILE *fp){
 			emit_out(p,fp);
 			emit(fp,"cat stack.txt", "", ">>","", p->name);
 			break;
-		case A_CLEAR:
-			emit(fp,"clear","","","","");
 		case A_RUN:
 			emit_run(p,fp);
 			break;
@@ -62,11 +59,11 @@ void emit_ast(ASTNode *p, FILE *fp){
 			emit_remove(p,fp);
 			break;
 		default:
-			fprintf(stderr,"Invalid syntax\n");
+			printf("Invalid syntax\n");
 			exit(1);
 			break;
 		}
-}
+	}
 void emit(FILE *fp, char *command, char *options, char *main, char *input, char *output){
 	if (strcmp("",options)==0) {
 			fprintf(fp, "%s %s %s %s \n", command, main,input,output);
@@ -76,7 +73,6 @@ void emit(FILE *fp, char *command, char *options, char *main, char *input, char 
 			fprintf(fp, "%s -%s %s %s %s  \n", command, options, main, input, output);
 			fflush(fp);
 		}
-	fflush(fp);
 }
 void emit_make(ASTNode *p, FILE *fp){
 	if (strcmp("f",p->type)==0) emit(fp,"touch","",p->name,"","");
@@ -84,8 +80,7 @@ void emit_make(ASTNode *p, FILE *fp){
 }
 
 void emit_show(ASTNode *p, FILE *fp){
-	char *opts;
-	opts=malloc(32);
+	char *opts = "";
 	if(p->s1 != NULL){
 		ASTNode *current = p->s1;
 		while (current!=NULL){
@@ -101,7 +96,7 @@ void emit_show(ASTNode *p, FILE *fp){
 		}
 	}
 	emit(fp, "ls", opts, "","","> stack.txt");
-	if(!cl)emit(fp,"cat","","","stack.txt","");
+	emit(fp,"cat","","","stack.txt","");
 }
 
 void emit_goto(ASTNode *p, FILE *fp){
@@ -111,19 +106,18 @@ void emit_goto(ASTNode *p, FILE *fp){
 void emit_where(ASTNode *p, FILE *fp){
 	if (strcmp("me",p->name)==0) emit(fp, "pwd", "","",""," > stack.txt");
 	else{ emit(fp,"cd","","","~","");
-	if (!p->type) emit(fp, "find", "iname", "", p->name," DeskGPT/compiler/> stack.txt");
-	else if (strcmp("f",p->type)==0) emit(fp, "find", "type f", "-iname", p->name," > DeskGPT/compiler/stack.txt");
+	if (strcmp("f",p->type)==0) emit(fp, "find", "type f", "-iname", p->name," > DeskGPT/compiler/stack.txt");
 	else if (strcmp("d",p->type)==0) emit(fp, "find", "type d", "-iname", p->name," > DeskGPT/compiler/stack.txt");
-	else emit(fp, "cat stack.txt","",p->name, " -iname",(cl==0)?" > DeskGPT/compiler/stack.txt":""); 
+	else if (strcmp("last",p->type)==0) emit(fp, "cat stack.txt","",p->name, " -iname"," > DeskGPT/compiler/stack.txt"); 
+	else emit(fp, "find", "iname", "", p->name," DeskGPT/compiler/> stack.txt");
 	emit(fp,"cd","","","-","");
-	if(!cl) emit(fp,"cat","","","stack.txt","");
+	emit(fp,"cat","","","stack.txt","");
 
 	}
 }
 
 void emit_match(ASTNode *p, FILE *fp){
-	char *opts;
-	opts =  malloc(32);
+	char *opts = "";
 	if(p->s2 != NULL){
 		ASTNode *current = p->s2;
 		while(current != NULL){
@@ -132,30 +126,18 @@ void emit_match(ASTNode *p, FILE *fp){
 			}
         }
 	char *loc = "";
-	char *type;
-	type = malloc(16);
 	if (p->s1 != NULL){
 		loc = p->s1->name;
-		if(p->s1->type!=NULL) snprintf(type,16,"%s",p->s1->type);
 	}
-	char *gopts;
-	gopts=malloc(32);
-	snprintf(gopts,32, "grep -%s %s", opts,p->s1);
-
-	if (p->s1 && strcmp("l",type)==0){
-		emit(fp,"cat stack.txt", "", loc, gopts, " > stack.txt");
-		
-	}
-	else {
-		emit(fp, "grep", opts, p->name,loc," > stack.txt");
-	}
-	if(!cl) emit(fp,"cat","","","stack.txt","");
+	char gopts[100] = "";
+	sprintf(gopts, "grep -%s %s", opts,p->s1);
+	if (strcmp("last",p->s2->type)==0) emit(fp,"cat stack.txt", "", loc, gopts, " > stack.txt");
+	else emit(fp, "grep", opts, p->name,loc," > stack.txt");
+	emit(fp,"cat","","","stack.txt","");
 }
 
 void emit_uniques(ASTNode *p, FILE *fp){
-	char *opts;
-	opts=malloc(32);
-	snprintf(opts,32,"");
+	char *opts = "";
 	if(p->s1 != NULL){
 		ASTNode *current = p->s1;
 		while(current != NULL){
@@ -163,20 +145,15 @@ void emit_uniques(ASTNode *p, FILE *fp){
 			current=current->s1;
 			}
         }
-	char *uopts;
-	uopts=malloc(32);
-	snprintf(uopts,32,"uniq -%s ",opts);
-	if(p->type != NULL && strcmp("l", p->type)==0) emit(fp,"cat stack.txt", "", p->name,uopts,"> stack.txt");
-	else emit(fp,"uniq",opts,"",p->name,(!cl)?"> stack.txt":"");
-	if(!cl) emit(fp,"cat","","","stack.txt","");
+	char uopts[100];
+	sprintf(uopts,"uniq -%s ",opts);
+	if(strcmp("last", p->type)==0) emit(fp,"cat stack.txt", "", p->name,uopts,"> stack.txt");
+	else emit(fp,"uniq",opts,"",p->name,"> stack.txt");
+	emit(fp,"cat","","","stack.txt","");
 }
 
 void emit_read(ASTNode *p, FILE *fp){
-	if (!cl){
-	       	emit(fp,"echo","When in read mode you will have to press q when done reading to quit. Press ENTER to acknowledge.","","","");
-		emit(fp,"read input","","","","");
-	}
-	if (p->type != NULL && strcmp("l",p->type)==0) emit(fp, "cat stack.txt", "",p->name,"less","");
+	if (strcmp("last",p->type)==0) emit(fp, "cat stack.txt", "",p->name,"less","");
 	else emit(fp, "less","","",p->name,"");
 }
 
@@ -186,19 +163,20 @@ void emit_bc(ASTNode *p, FILE *fp){
 }
 
 void emit_open(ASTNode *p, FILE *fp){
-	if (p->type != NULL && strcmp("l",p->type)==0) emit(fp, "cat stack.txt", "", p->name, "vim","");
+	if (strcmp("last",p->type)==0) emit(fp, "cat stack.txt", "", p->name, "vim","");
 	else emit(fp, "vim", "", "", p->name, "");
 }
 
 void emit_out(ASTNode *p, FILE *fp){
 	if (p->s1!=NULL){
-		if (p->type != NULL && strcmp("",p->type)!=0) emit(fp, "cat stack.txt","",p->name, "cat > ",p->s1->name);
-		else emit(fp,"cat","",p->name,">",p->s1->name);
+		if(strcmp("",p->type)!=0) emit(fp, "cat stack.txt","n",p->name, "cat > ",p->s1->name);
+		else emit(fp,"cat","n",p->name,">",p->s1->name);
 	}
 	else{
-		if(p->type !=NULL && strcmp("",p->type)!=0) emit(fp, "cat stack.txt","",p->name, "cat","");
-		else emit(fp,"cat","",p->name,"",(!cl)?"> stack.txt":""); 
-		if (!cl) emit(fp,"cat","","","stack.txt","");
+		if(strcmp("",p->type)!=0) emit(fp, "cat stack.txt","n",p->name, "cat","");
+		else emit(fp,"cat","",p->name,"","> stack.txt"); 
+		fprintf(stderr,"%s\n",p->name);
+		emit(fp,"cat","","","stack.txt","");
 	}
 }
 
@@ -221,34 +199,29 @@ void emit_run(ASTNode *p, FILE *fp){
 
 }
 void emit_count(ASTNode *p, FILE *fp){
-	char *opts;
-	opts=malloc(32);
+	char *opts = ""; // This block of code is reused several times, might want to make it its own function
 	if(p->s1 != NULL){
 		ASTNode *current = p->s1;
 		while(current != NULL){
 			strcat(opts,current->name);
 			current=current->s1; }
         }
-	char *copts;
-	copts=malloc(32);
-	snprintf(copts,32,"wc -%s",opts);
-	if(p->type !=NULL && strcmp("",p->type)!=0) emit(fp,"cat stack.txt","",p->name,copts,"> stack.txt");
-	else emit(fp,"wc",opts,p->name,"",(!cl)?"> stack.txt":"");
-	if (!cl) emit(fp,"cat","","","stack.txt","");
+	char copts[100];
+	sprintf(copts,"wc -%s",opts);
+	if(strcmp("",p->type)!=0) emit(fp,"cat stack.txt","",p->name,copts,"> stack.txt");
+	else emit(fp,"wc",opts,p->name,"","> stack.txt");
+	emit(fp,"cat","","","stack.txt","");
 }
 
 void emit_take(ASTNode *p, FILE *fp){
-	char *topt;
-	topt=malloc(64);
-	char *targ;
-        targ = malloc(16);
-	targ= "f";
+	char topt[100];
+	char *targ = "f";
 	if (strcmp("c",p->name)==0) targ = "c";
-	if (strcmp("c",targ)==0) snprintf(topt,64,"cut -c %d", p->value);
-	else snprintf(topt,64,"cut -f %s -d %s",p->value, (strcmp("w",p->name)==0)? "\" \"" : p->name);
-	if(p->s1->type != NULL && strcmp("",p->s1->type)!=0) emit(fp, "cat stack.txt", "", p->name,topt,"> stack.txt");
-	else emit(fp,topt,"",p->s1->name,"",(!cl)? "> stack.txt":"");
-	if(!cl) emit(fp,"cat","","","stack.txt","");
+	if (strcmp("c",targ)==0) sprintf(topt,"cut -c %d", p->value);
+	else sprintf(topt,"cut -f %d -d %s",p->value, (strcmp("w",p->name)==0)? "\" \"" : p->name);
+	if(strcmp("",p->s1->type)!=0) emit(fp, "cat stack.txt", "", p->name,topt,"> stack.txt");
+	else emit(fp,topt,"",p->s1->name,"","> stack.txt");
+	emit(fp,"cat","","","stack.txt","");
 }
 void emit_rename(ASTNode *p, FILE *fp){
 	emit(fp,"echo","","If a file exists with this name, it will be replaced. Proceed?","","y/n");
@@ -260,7 +233,7 @@ void emit_rename(ASTNode *p, FILE *fp){
 void emit_remove(ASTNode *p, FILE *fp){
 	emit(fp,"echo","","Are you sure you want to delete this?","","y/n");
 	emit(fp,"read","","input","","");
-	emit(fp,"if test $input = \"y\"","","\nthen\n",(p->type != NULL && strcmp("f",p->type)==0)? "rm" : "rm -r",p->name);
+	emit(fp,"if test $input = \"y\"","","\nthen\n",(strcmp("f",p->type)==0)? "rm" : "rm -r",p->name);
 	emit(fp,"else\n","","echo \"Action cancelled\"","","");
 	emit(fp,"fi","","","","");
 }

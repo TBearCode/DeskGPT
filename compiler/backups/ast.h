@@ -24,7 +24,6 @@ enum ASTtype {
 	A_TAKE,
 	A_RENAME,
 	A_REMOVE,
-	A_CLEAR,
 	A_LOC,
 	A_FIND,
 	A_GREP,

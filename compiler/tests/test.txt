@@ -1,0 +1,4 @@
+where file x.txt
+where me
+make file mylocation.txt
+output last into mylocation.txt

@@ -41,7 +41,6 @@ int token_no = 0;
 "rename" { return (T_RENAME); }
 "remove" { return (T_RM); }
 "root" { return (T_ROOT); }
-"clear" { return (T_CLEAR); }
 "file" { return (T_FILE); }
 "folder" { return (T_FOLDER); }
 "in" { return (T_LOC); }
@@ -55,16 +54,9 @@ int token_no = 0;
 "unique" { return (T_U); }
 "and" { return (T_AND); }
 "elem" { return (T_ELEM); }
-"replace" { return (T_REPLACE); }
-"overwrite" { return (T_OVERWRITE); }
-"edit text" { return (T_SED); }
-"in place" { return (T_IP); }
-"substitute" { return (T_SUB); }
-"sort" { return (T_SORT); }
-"delete" { return (T_DELETE); }
 \/\/.*        { if(verbose)printf("Comment"); }
 
-[&,:;]	{ return (*yytext); }
+
 [a-zA-Z0-9\./_\-+*()]+       { if(verbose)fprintf(stderr, "User Input: %s\n",yytext);
 			yylval.string=strdup(yytext); return (T_IN);}
 \n       { if (verbose) fprintf(stderr, "new line %c\n",*yytext); line_no++; token_no=0;}

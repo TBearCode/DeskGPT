@@ -9,7 +9,7 @@ extern int line_no;
 extern int token_no;
 
 int yylex();
-int cl = 0;
+
 
 void  yyerror (s)
 	char *s;
@@ -28,9 +28,9 @@ void  yyerror (s)
 	}
 
 %token <string> T_IN T_NUM
-%token T_MAKE T_SHOW T_CD T_FIND T_GREP T_UNIQ T_CAT T_LESS T_CALC T_REDIRECT T_BY T_ABOVE T_PREV T_ROOT T_TIME T_ME T_OPEN T_ECHO T_BASH T_WC T_L T_CUT T_THROUGH T_RENAME T_RM T_C T_M T_W T_REV T_ALL T_LONG T_FILE T_FOLDER T_LOC T_FROM T_SEP T_LAST T_QUIET T_IGNORE T_RECURSE T_U T_AND T_WHITE T_COUNT T_REMOVE T_TAKE T_OUTPUT T_LAST_FILE T_ELEM T_CLEAR T_REPLACE T_OVERWRITE T_SED T_IP T_SUB T_SORT T_DELETE 
+%token T_MAKE T_SHOW T_CD T_FIND T_GREP T_UNIQ T_CAT T_LESS T_CALC T_REDIRECT T_BY T_ABOVE T_PREV T_ROOT T_TIME T_ME T_OPEN T_ECHO T_BASH T_WC T_L T_CUT T_THROUGH T_RENAME T_RM T_C T_M T_W T_REV T_ALL T_LONG T_FILE T_FOLDER T_LOC T_FROM T_SEP T_LAST T_QUIET T_IGNORE T_RECURSE T_U T_AND T_WHITE T_COUNT T_REMOVE T_TAKE T_OUTPUT T_LAST_FILE T_ELEM 
 
-%type <node> CommandList Command Make Show Goto Where Match Uniques Read Evaluate Open Output Run Count Take Rename Remove WSubject CSubject RSubject ShowOpts ShowArgs ShowOpt ShowArg Location COpt OutArg MatchOpts GLoc MatchOpt ULoc UniqueOpts UniqueOpt ReadLoc OpenLoc TOpts TOpt TArg COpts Clear Replace TextEdit Sort SOpts SOpt SObj TEObj TEOpts TEOpt
+%type <node> CommandList Command Make Show Goto Where Match Uniques Read Evaluate Open Output Run Count Take Rename Remove WSubject CSubject RSubject ShowOpts ShowArgs ShowOpt ShowArg Location COpt OutArg MatchOpts GLoc MatchOpt ULoc UniqueOpts UniqueOpt ReadLoc OpenLoc TOpts TOpt TArg COpts
 
 %%
 
@@ -40,15 +40,10 @@ Program : CommandList
 	;
 
 CommandList :Command CommandList
-	     {$$ = ASTCreateNode(A_COMMAND_LIST);
+	     { printf("Command List Node");$$ = ASTCreateNode(A_COMMAND_LIST);
 	      $$->s1 = $1;
 	      $$->s2 = $2;}
-	    |Command T_AND CommandList
-		{$$=ASTCreateNode(A_COMMAND_LIST);
-		 $$->s1 = $1;
-		 $$->s2 = $3;
-		 }
-	    |Command {$$=ASTCreateNode(A_COMMAND_LIST); $$->s1=$1;}
+	    |Command { printf("Final Command Node");$$=ASTCreateNode(A_COMMAND_LIST); $$->s1=$1;}
 	    ;
 
 Command : Make { $$ = $1; }
@@ -66,14 +61,11 @@ Command : Make { $$ = $1; }
 	| Take { $$ = $1; }
 	| Rename{ $$ = $1; }
 	| Remove{ $$ = $1; }
-	| Clear {$$=$1;} 
-	| Replace {$$=$1;}
-	| TextEdit {$$=$1;}
-	| Sort {$$=$1;}
+//	| Replace{ $$ = $1; } //not implemented
 	;
 
-Make : T_MAKE T_FILE T_IN { $$ = ASTCreateNode(A_MAKE);$$->name = $3; $$->type = "f";}
-     | T_MAKE T_FOLDER T_IN { $$ = ASTCreateNode(A_MAKE); $$->name = $3; $$->type = "d"; }
+Make : T_MAKE T_FILE T_IN { printf("NEW NODE");$$ = ASTCreateNode(A_MAKE); printf("Setting Name");$$->name = $3; $$->type = "f"; printf("Make node");}
+     | T_MAKE T_FOLDER T_IN { printf("NEW NODE");$$ = ASTCreateNode(A_MAKE); $$->name = $3; $$->type = "d"; }
      ;
 
 Show : T_SHOW { $$ = ASTCreateNode(A_SHOW); }
@@ -83,7 +75,7 @@ Show : T_SHOW { $$ = ASTCreateNode(A_SHOW); }
      ;
 
 ShowArgs : ShowArg {$$ = $1;}
-	 | ShowArg '&' ShowArgs {$$=$1; $$->s1 = $3;}
+	 | ShowArg "," ShowArgs {$$=$1; $$->s1 = $3;}
 	 ;
 
 ShowArg : T_ALL { $$ = ASTCreateNode(A_SHOW_ARG); $$->name = "a";}
@@ -92,7 +84,7 @@ ShowArg : T_ALL { $$ = ASTCreateNode(A_SHOW_ARG); $$->name = "a";}
 
 ShowOpts : ShowOpt
 		{ $$ = $1;}
-	 | ShowOpt '&' ShowOpts
+	 | ShowOpt "," ShowOpts
 	 	{ $$ = $1; $$->s1 = $3;}
 	 ;
 
@@ -117,7 +109,7 @@ WSubject : T_FILE T_IN {$$ = ASTCreateNode(A_FIND); $$->type = "f"; $$->name = $
 	| T_FOLDER T_IN {$$ = ASTCreateNode(A_FIND); $$->type = "d"; $$->name = $2;}
 	| T_ME {$$ = ASTCreateNode(A_FIND); $$->name = "me";}
 	| T_IN {$$ = ASTCreateNode(A_FIND); $$->name = $1;}
-	| T_LAST {$$ = ASTCreateNode(A_FIND); $$-> type = "l"; $$->name = " | xargs -n 1 ";}
+	| T_LAST {$$ = ASTCreateNode(A_FIND); $$-> type = "last"; $$->name = " | xargs -n 1 ";}
 	;
 
 Match : T_GREP T_IN "-" MatchOpts {$$ = ASTCreateNode(A_GREP); $$->name = $2; $$->s2 = $4; }
@@ -127,12 +119,12 @@ Match : T_GREP T_IN "-" MatchOpts {$$ = ASTCreateNode(A_GREP); $$->name = $2; $$
       ;
 
 GLoc : T_IN {$$ = ASTCreateNode(A_GLOC); $$->name = $1;}
-     | T_LAST_FILE {$$ = ASTCreateNode(A_GLOC); $$->type = "l" ;$$->name = " | xargs -n 1 "; }
+     | T_LAST_FILE {$$ = ASTCreateNode(A_GLOC); $$->type = "last" ;$$->name = " | xargs -n 1 "; }
      | T_ALL {$$ = ASTCreateNode(A_GLOC); $$->name = "*"; }
      ;
 
 MatchOpts : MatchOpt {$$ = $1;}
-	  | MatchOpt '&' MatchOpts {$$ = $1; $$->s1 = $3;}
+	  | MatchOpt "," MatchOpts {$$ = $1; $$->s1 = $3;}
 	  ;
 
 MatchOpt : T_WC {$$ = ASTCreateNode(A_MATCH_OPT); $$->name = "c";}
@@ -142,15 +134,15 @@ MatchOpt : T_WC {$$ = ASTCreateNode(A_MATCH_OPT); $$->name = "c";}
 	 | T_RECURSE{$$ = ASTCreateNode(A_MATCH_OPT); $$->name = "r";}
 	 ;
 
-Uniques : T_UNIQ T_LOC ULoc UniqueOpts {$$ = $3; $$->s1 = $4;}
+Uniques : T_UNIQ T_LOC ULoc "-" UniqueOpts {$$ = $3; $$->s1 = $5;}
         | T_UNIQ T_LOC ULoc  {$$ = $3;}
 	;
 
 ULoc : T_IN {$$ = ASTCreateNode(A_UNIQ); $$->name = $1;} 
-     | T_LAST_FILE {$$ = ASTCreateNode(A_UNIQ); $$->type = "l"; $$->name = " | xargs -n 1 ";}
+     | T_LAST_FILE {$$ = ASTCreateNode(A_UNIQ); $$->type = "last"; $$->name = " | xargs -n 1 ";}
      ;
 
-UniqueOpts : UniqueOpt '&' UniqueOpts {$$ = $1; $$->s1 = $3;}
+UniqueOpts : UniqueOpt "," UniqueOpts {$$ = $1; $$->s1 = $3;}
 	   | UniqueOpt {$$ = $1;}
 	   ;
 
@@ -163,7 +155,7 @@ Read : T_LESS ReadLoc {$$ = $2;}
      ;
 
 ReadLoc : T_IN {$$ = ASTCreateNode(A_READ); $$->name = $1;}
-	| T_LAST_FILE {$$ = ASTCreateNode(A_READ); $$->type = "l"; $$->name = " | xargs -n 1 ";}
+	| T_LAST_FILE {$$ = ASTCreateNode(A_READ); $$->type = "last"; $$->name = " | xargs -n 1 ";}
 	;
 
 Evaluate : T_CALC T_IN {$$ = ASTCreateNode(A_BC); $$->name = $2;}
@@ -173,7 +165,7 @@ Open : T_OPEN OpenLoc { $$ = $2;}
      ;
 
 OpenLoc : T_IN {$$=ASTCreateNode(A_OLOC); $$->name = $1;}
-	| T_LAST_FILE {$$=ASTCreateNode(A_OLOC); $$->type = "l"; $$->name = " | xargs -n 1";}
+	| T_LAST_FILE {$$=ASTCreateNode(A_OLOC); $$->type = "last"; $$->name = " | xargs -n 1";}
 	;
 
 Output : T_OUTPUT OutArg {$$ = $2; }
@@ -193,7 +185,7 @@ Count : T_WC COpts T_LOC CSubject { $$ = $4; $$->s1 = $2;}
       | T_WC CSubject { $$ = $2;}
       ;
 
-COpts : COpt '&' COpts {$$=$1; $$->s1 = $3;}
+COpts : COpt "," COpts {$$=$1; $$->s1 = $3;}
       | COpt {$$=$1;}
       ;
 
@@ -209,10 +201,10 @@ CSubject : T_LAST {$$ = ASTCreateNode(A_COUNT); $$->type = "li"; $$->name = " | 
 	 | T_ALL{$$ = ASTCreateNode(A_COUNT); $$->name = "*" ;}
 	 ;
 
-Take : T_CUT T_ELEM T_NUM T_IN T_FROM TOpts T_SEP T_BY TArg {$$ = $9; $$->value = $4; $$->s1 = $6;}
+Take : T_TAKE T_ELEM T_NUM T_FROM TOpts T_SEP T_BY TArg {$$ = $8; $$->value = $3; $$->s1 = $5;}
      ;
 
-TOpts : TOpt '&' TOpts {$$=$1; $$->s1=$3;}
+TOpts : TOpt "," TOpts {$$=$1; $$->s1=$3;}
       | TOpt {$$=$1;}
       ;
 
@@ -227,51 +219,13 @@ TArg : T_WHITE { $$ = ASTCreateNode(A_TAKE); $$->name = "w";}
 	| T_C { $$ = ASTCreateNode(A_TAKE); $$->name = "c";}
 	;
 
-Rename : T_RENAME T_IN T_IN { $$ = ASTCreateNode(A_RENAME); $$->name = $2; strcat($$->name, " "); strcat($$->name,$3);}
+Rename : T_RENAME T_IN T_IN { $$ = ASTCreateNode(A_RENAME); $$->name = $2; strcat($$->name, ", "); strcat($$->name,$3);}
        ;
-Remove : T_RM RSubject {$$ = $2;}
+Remove : T_REMOVE RSubject {$$ = $2;}
        ;
 RSubject : T_FILE T_IN { $$ = ASTCreateNode(A_REMOVE); $$->name = $2; $$->type = "f";}
 	 | T_FOLDER T_IN { $$ = ASTCreateNode(A_REMOVE); $$->name = $2; $$->type = "d";}
 	 ;
-Clear : T_CLEAR {$$ = ASTCreateNode(A_CLEAR); }
-      ;
-
-Replace : T_REPLACE T_IN T_IN T_LOC T_IN
-	  {$$=ASTCreateNode(A_REPLACE);
-	   $$->s1 = ASTCreateNode(A_GREP);
-	   $$->name = $5;
-	   $$->s1->name = $2;
-	   $$->s1->value = $3;
-	};
-
-Sort : T_SORT SObj T_BY SOpts 
-     	{$$=$2; $$->s1 = $4;}
-     ;
-
-SObj : T_LAST { $$=ASTCreateNode(A_SORT); $$->type="li"; $$->name=" | xargs -n 1";}
-     | T_LAST_FILE { $$=ASTCreateNode(A_SORT); $$->type="l"; $$->name= " | ";}
-     | T_IN {$$=ASTCreateNode(A_SORT); $$->name = $1;}
-     | T_ALL {$$=ASTCreateNode(A_SORT); $$->name = "*";} 
-     ;
-
-SOpts : SOpt '&' SOpts {$$=$1;$$->s1 = $3;}
-      | SOpt {$$=$1;}
-      ;
-
-SOpt : T_NUM {$$=ASTCreateNode(SOpt); $$->name = "n";} 
-     | T_REV {$$=ASTCreateNode(SOpt); $$->name = "r";} 
-     | T_IGNORE {$$=ASTCreateNode(SOpt); $$->name = "f";}
-     ; 
-TextEdit : T_SED T_SUB T_IN T_IN T_LOC TEObj ':' TEOpts
-	 | T_SED T_DELETE T_IN T_LOC TEObj ':' TEOpts
-	 ;
-
-TEOpts : TEOpt '&' TEOpts
-       | TEOpt
-       ;
-
-TEObj : T_LAST
 %%
 
 int main(int argc, char *argv[]){
@@ -288,11 +242,9 @@ int main(int argc, char *argv[]){
 				exit(1);
 			}
 		}
-		if(strcmp("-c",argv[i])==0){
-			cl = 1;
-			}
-			
 	}
+	char *a = "";
+	printf("%s\n",a);
 	if(!fp) fprintf(stderr,"NO FILE");	
 	yyparse();
 	emit_ast(program,fp);

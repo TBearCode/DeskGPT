@@ -1,0 +1,20 @@
+total 252
+-rw-r--r-- 1 taikman ugrads     0 Jan 23 14:00 stack.txt
+-rw-r--r-- 1 taikman ugrads  1048 Jan 23 14:00 test2
+-rw-r--r-- 1 taikman ugrads    16 Jan 23 14:00 record.txt
+-rw-r--r-- 1 taikman ugrads   343 Jan 23 13:59 test.sh
+-rwxr-xr-x 1 taikman ugrads 49464 Jan 23 13:59 compiler
+-rw-r--r-- 1 taikman ugrads  4096 Jan 23 13:59 y.tab.h
+-rw-r--r-- 1 taikman ugrads 74008 Jan 23 13:59 y.tab.c
+-rw-r--r-- 1 taikman ugrads 57052 Jan 23 13:59 lex.yy.c
+-rw-r--r-- 1 taikman ugrads  6914 Jan 23 13:59 emit.c
+-rw-r--r-- 1 taikman ugrads   229 Jan 23 13:56 test
+-rw-r--r-- 1 taikman ugrads  8173 Jan 23 13:55 comp.y
+-rw-r--r-- 1 taikman ugrads  1820 Jan 22 16:25 comp.l
+-rw-r--r-- 1 taikman ugrads   636 Jan 22 16:10 ast.h
+-rw-r--r-- 1 taikman ugrads    16 Jan 20 12:40 example
+drwxr-xr-x 2 taikman ugrads  4096 Jan 20 12:32 backups
+drwxr-xr-x 2 taikman ugrads  4096 Jan 20 11:37 tests
+-rw-r--r-- 1 taikman ugrads   760 Jan 19 15:31 emit.h
+-rw-r--r-- 1 taikman ugrads   260 Jan 19 15:15 ast.c
+-rw-r--r-- 1 taikman ugrads   178 Jan 18 16:20 makefile
