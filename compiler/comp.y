@@ -27,10 +27,10 @@ void  yyerror (s)
 	ASTNode * node;
 	}
 
-%token <string> T_IN T_NUM
-%token T_MAKE T_SHOW T_CD T_FIND T_GREP T_UNIQ T_CAT T_LESS T_CALC T_REDIRECT T_BY T_ABOVE T_PREV T_ROOT T_TIME T_ME T_OPEN T_ECHO T_BASH T_WC T_L T_CUT T_THROUGH T_RENAME T_RM T_C T_M T_W T_REV T_ALL T_LONG T_FILE T_FOLDER T_LOC T_FROM T_SEP T_LAST T_QUIET T_IGNORE T_RECURSE T_U T_AND T_WHITE T_COUNT T_REMOVE T_TAKE T_OUTPUT T_LAST_FILE T_ELEM T_CLEAR T_REPLACE T_OVERWRITE T_SED T_IP T_SUB T_SORT T_DELETE 
+%token <string> T_IN
+%token T_MAKE T_SHOW T_CD T_FIND T_GREP T_UNIQ T_CAT T_LESS T_CALC T_REDIRECT T_BY T_ABOVE T_PREV T_ROOT T_TIME T_ME T_OPEN T_ECHO T_BASH T_WC T_L T_CUT T_THROUGH T_RENAME T_RM T_C T_M T_W T_REV T_ALL T_LONG T_FILE T_FOLDER T_LOC T_FROM T_SEP T_LAST T_QUIET T_IGNORE T_RECURSE T_U T_AND T_WHITE T_COUNT T_REMOVE T_TAKE T_OUTPUT T_LAST_FILE T_ELEM T_CLEAR T_REPLACE T_OVERWRITE T_SED T_IP T_SUB T_SORT T_DELETE T_NUM 
 
-%type <node> CommandList Command Make Show Goto Where Match Uniques Read Evaluate Open Output Run Count Take Rename Remove WSubject CSubject RSubject ShowOpts ShowArgs ShowOpt ShowArg Location COpt OutArg MatchOpts GLoc MatchOpt ULoc UniqueOpts UniqueOpt ReadLoc OpenLoc TOpts TOpt TArg COpts Clear Replace TextEdit Sort SOpts SOpt SObj TEObj TEOpts TEOpt
+%type <node> CommandList Command Make Show Goto Where Match Uniques Read Evaluate Open Output Run Count Take Rename Remove WSubject CSubject RSubject ShowOpts ShowArgs ShowOpt ShowArg Location COpt OutArg MatchOpts GLoc MatchOpt ULoc UniqueOpts UniqueOpt ReadLoc OpenLoc TOpts TOpt TArg COpts Clear Replace /*TextEdit*/ Sort SOpts SOpt SObj //TEObj TEOpts TEOpt
 
 %%
 
@@ -68,7 +68,7 @@ Command : Make { $$ = $1; }
 	| Remove{ $$ = $1; }
 	| Clear {$$=$1;} 
 	| Replace {$$=$1;}
-	| TextEdit {$$=$1;}
+	//| TextEdit {$$=$1;}
 	| Sort {$$=$1;}
 	;
 
@@ -120,8 +120,8 @@ WSubject : T_FILE T_IN {$$ = ASTCreateNode(A_FIND); $$->type = "f"; $$->name = $
 	| T_LAST {$$ = ASTCreateNode(A_FIND); $$-> type = "l"; $$->name = " | xargs -n 1 ";}
 	;
 
-Match : T_GREP T_IN "-" MatchOpts {$$ = ASTCreateNode(A_GREP); $$->name = $2; $$->s2 = $4; }
-      | T_GREP T_IN T_LOC GLoc "-" MatchOpts {$$ = ASTCreateNode(A_GREP); $$->name = $2; $$->s1 = $4; $$->s2 = $6;}
+Match : T_GREP T_IN ':' MatchOpts {$$ = ASTCreateNode(A_GREP); $$->name = $2; $$->s2 = $4; }
+      | T_GREP T_IN T_LOC GLoc ':' MatchOpts {$$ = ASTCreateNode(A_GREP); $$->name = $2; $$->s1 = $4; $$->s2 = $6;}
       | T_GREP T_IN  {$$ = ASTCreateNode(A_GREP); $$->name = $2;}
       | T_GREP T_IN T_LOC GLoc {$$ = ASTCreateNode(A_GREP); $$->name = $2; $$->s1 = $4;}
       ;
@@ -140,6 +140,7 @@ MatchOpt : T_WC {$$ = ASTCreateNode(A_MATCH_OPT); $$->name = "c";}
 	 | T_QUIET{$$ = ASTCreateNode(A_MATCH_OPT); $$->name = "q";}
 	 | T_IGNORE{$$ = ASTCreateNode(A_MATCH_OPT); $$->name = "i";}
 	 | T_RECURSE{$$ = ASTCreateNode(A_MATCH_OPT); $$->name = "r";}
+	 | T_NUM {$$ = ASTCreateNode(A_MATCH_OPT); $$->name = "n";}
 	 ;
 
 Uniques : T_UNIQ T_LOC ULoc UniqueOpts {$$ = $3; $$->s1 = $4;}
@@ -247,10 +248,12 @@ Replace : T_REPLACE T_IN T_IN T_LOC T_IN
 
 Sort : T_SORT SObj T_BY SOpts 
      	{$$=$2; $$->s1 = $4;}
+     | T_SORT SObj 
+	{$$=$2;}
      ;
 
-SObj : T_LAST { $$=ASTCreateNode(A_SORT); $$->type="li"; $$->name=" | xargs -n 1";}
-     | T_LAST_FILE { $$=ASTCreateNode(A_SORT); $$->type="l"; $$->name= " | ";}
+SObj : T_LAST_FILE { $$=ASTCreateNode(A_SORT); $$->type="li"; $$->name=" | xargs -n 1";}
+     | T_LAST { $$=ASTCreateNode(A_SORT); $$->type="l"; $$->name= " | ";}
      | T_IN {$$=ASTCreateNode(A_SORT); $$->name = $1;}
      | T_ALL {$$=ASTCreateNode(A_SORT); $$->name = "*";} 
      ;
@@ -259,19 +262,19 @@ SOpts : SOpt '&' SOpts {$$=$1;$$->s1 = $3;}
       | SOpt {$$=$1;}
       ;
 
-SOpt : T_NUM {$$=ASTCreateNode(SOpt); $$->name = "n";} 
-     | T_REV {$$=ASTCreateNode(SOpt); $$->name = "r";} 
-     | T_IGNORE {$$=ASTCreateNode(SOpt); $$->name = "f";}
+SOpt : T_NUM {$$=ASTCreateNode(A_SOPT); $$->name = "n";} 
+     | T_REV {$$=ASTCreateNode(A_SOPT); $$->name = "r";} 
+     | T_IGNORE {$$=ASTCreateNode(A_SOPT); $$->name = "f";}
      ; 
-TextEdit : T_SED T_SUB T_IN T_IN T_LOC TEObj ':' TEOpts
-	 | T_SED T_DELETE T_IN T_LOC TEObj ':' TEOpts
-	 ;
-
-TEOpts : TEOpt '&' TEOpts
-       | TEOpt
-       ;
-
-TEObj : T_LAST
+//TextEdit : T_SED T_SUB T_IN T_IN T_LOC TEObj ':' TEOpts
+//	 | T_SED T_DELETE T_IN T_LOC TEObj ':' TEOpts
+//	 ;
+//
+//TEOpts : TEOpt '&' TEOpts
+//       | TEOpt
+//       ;
+//
+//TEObj : T_LAST
 %%
 
 int main(int argc, char *argv[]){

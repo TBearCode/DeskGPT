@@ -31,6 +31,7 @@ fi
 if test "$choice" = "c"
 then
 	echo "What would you like to translate?"
+	read input
 	while [[ "$input" != "done" ]]
 	do
 		echo $input > .input.txt

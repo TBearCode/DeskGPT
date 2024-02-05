@@ -20,5 +20,7 @@ void emit_rename(ASTNode *p, FILE *fp);
 void emit_remove(ASTNode *p, FILE *fp);
 void emit_bc(ASTNode *p, FILE *fp);
 void emit_open(ASTNode *p, FILE *fp);
+void emit_replace(ASTNode *p, FILE *fp);
+void emit_sort(ASTNode *p, FILE *fp);
 
 #endif

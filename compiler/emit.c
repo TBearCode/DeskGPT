@@ -61,6 +61,12 @@ void emit_ast(ASTNode *p, FILE *fp){
 		case A_REMOVE:
 			emit_remove(p,fp);
 			break;
+		case A_REPLACE:
+			emit_replace(p,fp);
+			break;
+		case A_SORT:
+			emit_sort(p,fp);
+			break;
 		default:
 			fprintf(stderr,"Invalid syntax\n");
 			exit(1);
@@ -109,14 +115,14 @@ void emit_goto(ASTNode *p, FILE *fp){
 }
 
 void emit_where(ASTNode *p, FILE *fp){
-	if (strcmp("me",p->name)==0) emit(fp, "pwd", "","",""," > stack.txt");
+	if (strcmp("me",p->name)==0) emit(fp, "pwd", "","",""," > stack.txt; cat stack.txt");
 	else{ emit(fp,"cd","","","~","");
-	if (!p->type) emit(fp, "find", "iname", "", p->name," DeskGPT/compiler/> stack.txt");
-	else if (strcmp("f",p->type)==0) emit(fp, "find", "type f", "-iname", p->name," > DeskGPT/compiler/stack.txt");
-	else if (strcmp("d",p->type)==0) emit(fp, "find", "type d", "-iname", p->name," > DeskGPT/compiler/stack.txt");
-	else emit(fp, "cat stack.txt","",p->name, " -iname",(cl==0)?" > DeskGPT/compiler/stack.txt":""); 
+	if (!p->type) emit(fp, "find", "iname", "", p->name," >DeskGPT/stack.txt");
+	else if (strcmp("f",p->type)==0) emit(fp, "find", "type f", "-iname", p->name," > DeskGPT/stack.txt");
+	else if (strcmp("d",p->type)==0) emit(fp, "find", "type d", "-iname", p->name," > DeskGPT/stack.txt");
+	else emit(fp, "cat stack.txt","",p->name, " -iname",(cl==0)?" > DeskGPT/stack.txt":""); 
 	emit(fp,"cd","","","-","");
-	if(!cl) emit(fp,"cat","","","stack.txt","");
+	if(!cl) emit(fp,"cat","","","~/DeskGPT/stack.txt","");
 
 	}
 }
@@ -264,4 +270,33 @@ void emit_remove(ASTNode *p, FILE *fp){
 	emit(fp,"else\n","","echo \"Action cancelled\"","","");
 	emit(fp,"fi","","","","");
 }
+void emit_replace(ASTNode *p, FILE *fp){
+	char *output;
+	output = malloc(100);
+	snprintf(output,100,"s/%s/%s/g %s",p->s1->name,p->s1->value,p->name);
+	emit(fp,"sed -i.bak","",output,"","");
+	emit(fp,"echo","","A backup file has been created and all occurrences of ",p->s1->name," have been replaced in original file.");
 
+
+}
+void emit_sort(ASTNode *p, FILE *fp){
+	char *opts;
+	opts=malloc(16);
+	if(p->s1 != NULL){
+		ASTNode *current = p->s1;
+		while (current!=NULL){
+			strcat(opts,current->name);
+			current=current->s1;
+		}
+	}
+	char*sopts;
+	sopts = malloc(32);
+	snprintf(sopts,32,"sort -%s",opts);
+	if(p->type!=NULL){
+		emit(fp,"cat stack.txt","",p->name,sopts,(!cl)?">stack1.txt":"");
+		emit(fp,"cat stack1.txt > stack.txt;","","rm stack1.txt","","");
+	}
+	else emit(fp, "sort",opts, p->name,"", (!cl)?">stack.txt":"");
+	if(!cl) emit(fp,"cat","","stack.txt","","");
+
+}
