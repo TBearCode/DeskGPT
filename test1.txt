@@ -1,0 +1,4 @@
+make file x
+match s in readme.md
+output last into x
+sort x
